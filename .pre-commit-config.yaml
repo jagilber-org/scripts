@@ -1,0 +1,27 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: no-commit-to-branch
+        args: ['--branch', 'main']
+
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+
+  - repo: local
+    hooks:
+      - id: pester-tests
+        name: Run Pester Tests
+        entry: pwsh -Command "Invoke-Pester ./tests/powershell -Passthru | Where-Object { $_.FailedCount -gt 0 } | ForEach-Object { exit 1 }"
+        language: system
+        types: [powershell]
+        pass_filenames: false

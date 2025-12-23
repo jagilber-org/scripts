@@ -1,0 +1,60 @@
+# Secrets
+*.env
+*.key
+*.pem
+*.pfx
+*.p12
+secrets.json
+.secrets/
+
+# PowerShell
+*.ps1xml
+*.psd1.bak
+*.psm1.bak
+
+# Logs
+*.log
+*.jsonl
+logs/
+*.etl
+
+# Test Results
+TestResults/
+*.trx
+coverage/
+.coverage
+htmlcov/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+.venv
+pip-log.txt
+
+# Bash
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.user
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary
+temp/
+tmp/
+*.tmp
+*.bak
+*.orig
