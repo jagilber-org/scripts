@@ -1,0 +1,66 @@
+#!/bin/sh
+# Pre-commit hook: dispatches to Test-PreCommitPii.ps1 for PII/secrets scanning.
+# Installed by Install-PreCommitHook.ps1
+#
+# Location of scanner (resolved relative to this hook):
+#   Walk up from .git/hooks to repo root, then find Test-PreCommitPii.ps1
+#   via PRECOMMIT_PII_SCRIPT env var or known relative paths.
+
+set -e
+
+# Try pwsh first, fall back to powershell
+PWSH=""
+if command -v pwsh >/dev/null 2>&1; then
+    PWSH="pwsh"
+elif command -v powershell >/dev/null 2>&1; then
+    PWSH="powershell"
+fi
+
+if [ -z "$PWSH" ]; then
+    echo "WARNING: PowerShell not found, skipping PII scan"
+    exit 0
+fi
+
+# Locate the scanner script
+# Priority: PRECOMMIT_PII_SCRIPT env var > scripts repo path > fallback search
+HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$HOOK_DIR/../.." && pwd)"
+
+SCRIPT=""
+
+# 1. Explicit override
+if [ -n "$PRECOMMIT_PII_SCRIPT" ] && [ -f "$PRECOMMIT_PII_SCRIPT" ]; then
+    SCRIPT="$PRECOMMIT_PII_SCRIPT"
+fi
+
+# 2. Sibling .ps1 in hooks dir
+if [ -z "$SCRIPT" ] && [ -f "$HOOK_DIR/Test-PreCommitPii.ps1" ]; then
+    SCRIPT="$HOOK_DIR/Test-PreCommitPii.ps1"
+fi
+
+# 3. Walk up from repo root looking for scripts
+if [ -z "$SCRIPT" ]; then
+    SEARCH_DIR="$(dirname "$REPO_ROOT")"
+    for i in 1 2 3 4; do
+        CANDIDATE="$SEARCH_DIR/jagilber-dev/scripts/powershell/git/Test-PreCommitPii.ps1"
+        if [ -f "$CANDIDATE" ]; then
+            SCRIPT="$CANDIDATE"
+            break
+        fi
+        # Also check without owner prefix
+        CANDIDATE="$SEARCH_DIR/scripts/powershell/git/Test-PreCommitPii.ps1"
+        if [ -f "$CANDIDATE" ]; then
+            SCRIPT="$CANDIDATE"
+            break
+        fi
+        SEARCH_DIR="$(dirname "$SEARCH_DIR")"
+    done
+fi
+
+if [ -z "$SCRIPT" ]; then
+    echo "WARNING: Test-PreCommitPii.ps1 not found, skipping PII scan"
+    echo "  Set PRECOMMIT_PII_SCRIPT env var to the script path"
+    exit 0
+fi
+
+exec "$PWSH" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$SCRIPT"
