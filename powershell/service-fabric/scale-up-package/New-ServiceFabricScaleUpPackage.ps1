@@ -291,8 +291,8 @@ function main {
 function Get-TopologyFromLive([string]$resourceGroupName, [string]$clusterName) {
     write-console "Querying cluster: $clusterName in RG: $resourceGroupName"
 
-    if (-not (Get-Module az -ListAvailable)) {
-        write-console "Az module not available. Install with: Install-Module Az" -err
+    if (-not (Get-Module Az.Accounts -ListAvailable)) {
+        write-console "Az.Accounts module not available. Install with: Install-Module Az.Accounts (or the full Az module)" -err
         return $null
     }
 
@@ -1070,13 +1070,17 @@ function New-ReplacementTemplate([SFTopology]$topology, [string]$outputFile) {
     }
 
     # === Build the ARM template wrapper with minimal parameters ===
+    # Minimum node count for a primary node type depends on durability:
+    #   Bronze allows 3; Silver/Gold require 5. Clamp to the durability floor, never below.
+    $minNodes = if ($topology.DurabilityLevel -imatch 'Bronze') { 3 } else { 5 }
+    $defaultNodes = if ($topology.Capacity -ge $minNodes) { $topology.Capacity } else { $minNodes }
     $armTemplate = [ordered]@{
         '$schema'      = 'https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#'
         contentVersion = '1.0.0.0'
         parameters     = [ordered]@{
             replacementVmssName          = @{ type = 'string'; maxLength = 9; metadata = @{ description = 'Name for the replacement VMSS (max 9 chars for Service Fabric)' } }
             replacementVmssSize          = @{ type = 'string'; defaultValue = $TargetVmSku; metadata = @{ description = 'VM SKU for the replacement VMSS' } }
-            replacementVmssInstanceCount = @{ type = 'int'; defaultValue = if ($topology.Capacity -ge 5) { $topology.Capacity } else { 5 }; minValue = 5 }
+            replacementVmssInstanceCount = @{ type = 'int'; defaultValue = $defaultNodes; minValue = $minNodes }
             adminPassword                = @{ type = 'securestring'; metadata = @{ description = 'Admin password for the replacement VMSS' } }
         }
         resources      = @(
@@ -1192,10 +1196,12 @@ function Set-ObjectProperty($obj, [string]$name, $value) {
 }
 
 function New-ReplacementParameters([SFTopology]$topology, [string]$outputFile) {
+    # Bronze durability allows a 3-node primary; Silver/Gold require 5.
+    $minNodes = if ($topology.DurabilityLevel -imatch 'Bronze') { 3 } else { 5 }
     $params = [ordered]@{
         replacementVmssName          = @{ value = $ReplacementVmssName }
         replacementVmssSize          = @{ value = $TargetVmSku }
-        replacementVmssInstanceCount = @{ value = if ($topology.Capacity -ge 5) { $topology.Capacity } else { 5 } }
+        replacementVmssInstanceCount = @{ value = if ($topology.Capacity -ge $minNodes) { $topology.Capacity } else { $minNodes } }
         adminPassword                = @{ value = '<REQUIRED:adminPassword>' }
     }
 
