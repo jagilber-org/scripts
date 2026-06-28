@@ -1,0 +1,24 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "clusterName": {
+      "value": "GEN-UNIQUE-3-to-23-chars"
+    },
+    "dnsName": {
+      "value": "GEN-UNIQUE-must-be-unique-in-region"
+    },
+    "certificateThumbprint": {
+      "value": "GEN-CUSTOM-DOMAIN-SSLCERT-THUMBPRINT"
+    },
+    "certificateUrlValue": {
+      "value": "https://<vault-name>.vault.azure.net:443/secrets/<secret-name>/<secret-version>"
+    },
+    "keyVaultResourceId": {
+      "value": "/subscriptions/<sub-id>/resourceGroups/<kv-rg>/providers/Microsoft.KeyVault/vaults/<vault-name>"
+    },
+    "adminUsername": {
+      "value": "vmadmin"
+    }
+  }
+}

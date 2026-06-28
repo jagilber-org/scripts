@@ -1,0 +1,201 @@
+{
+  "version": "1.0.0",
+  "description": "Constitution for jagilber-dev/scripts — machine-checkable quality gates for PowerShell script development",
+  "articles": [
+    {
+      "id": "quality",
+      "title": "Code Quality",
+      "description": "Standards for code quality, readability, and maintainability of PowerShell scripts.",
+      "rules": [
+        {
+          "id": "quality-001",
+          "text": "All scripts must use approved PowerShell verbs (Get-Verb) in their filenames following Verb-Noun.ps1 convention.",
+          "severity": "must"
+        },
+        {
+          "id": "quality-002",
+          "text": "All scripts must use PascalCase for script names, function names, and parameter names.",
+          "severity": "must"
+        },
+        {
+          "id": "quality-003",
+          "text": "All scripts must include a .SYNOPSIS and .DESCRIPTION in comment-based help.",
+          "severity": "must"
+        },
+        {
+          "id": "quality-004",
+          "text": "All scripts must pass PSScriptAnalyzer with zero errors.",
+          "severity": "must"
+        },
+        {
+          "id": "quality-005",
+          "text": "Scripts should use CmdletBinding and proper parameter declarations.",
+          "severity": "should"
+        },
+        {
+          "id": "quality-006",
+          "text": "Scripts may include .EXAMPLE sections demonstrating common usage patterns.",
+          "severity": "may"
+        },
+        {
+          "id": "quality-007",
+          "text": "All scripts must include a Version field in .NOTES using semantic versioning (Major.Minor.Patch, e.g. 1.0.0).",
+          "severity": "must"
+        },
+        {
+          "id": "quality-008",
+          "text": "All scripts must include a Changelog field in .NOTES with at least one entry per version. Newest entry at bottom.",
+          "severity": "must"
+        },
+        {
+          "id": "quality-009",
+          "text": "The Version field must be incremented for any functional or instruction change: patch for fixes, minor for features, major for breaking changes.",
+          "severity": "must"
+        }
+      ]
+    },
+    {
+      "id": "security",
+      "title": "Security",
+      "description": "Security policies for credential handling, input validation, and secret management.",
+      "rules": [
+        {
+          "id": "security-001",
+          "text": "Scripts must never hardcode credentials, keys, or connection strings.",
+          "severity": "must"
+        },
+        {
+          "id": "security-002",
+          "text": "Scripts must validate all external input parameters before use.",
+          "severity": "must"
+        },
+        {
+          "id": "security-003",
+          "text": "Scripts must not store secrets in plaintext files or logs.",
+          "severity": "must"
+        },
+        {
+          "id": "security-004",
+          "text": "Secrets detection must be enforced via pre-commit hooks (.secrets.baseline).",
+          "severity": "must"
+        },
+        {
+          "id": "security-005",
+          "text": "Scripts should use SecureString or Key Vault for sensitive values when applicable.",
+          "severity": "should"
+        }
+      ]
+    },
+    {
+      "id": "architecture",
+      "title": "Architecture",
+      "description": "Structural conventions for repository organization and script categorization.",
+      "rules": [
+        {
+          "id": "architecture-001",
+          "text": "Scripts must be organized into category folders under powershell/ (azure, service-fabric, diagnostics, data-collection, automation, utilities).",
+          "severity": "must"
+        },
+        {
+          "id": "architecture-002",
+          "text": "Each script must have a corresponding Pester test file in tests/powershell/.",
+          "severity": "must"
+        },
+        {
+          "id": "architecture-003",
+          "text": "Azure scripts must use the Az prefix in their noun (e.g., Get-AzVmImage).",
+          "severity": "must"
+        },
+        {
+          "id": "architecture-004",
+          "text": "Shared utilities should be self-contained single-file scripts with no cross-script dependencies.",
+          "severity": "should"
+        },
+        {
+          "id": "architecture-005",
+          "text": "New categories may be added when 5 or more related scripts exist that do not fit existing categories.",
+          "severity": "may"
+        }
+      ]
+    },
+    {
+      "id": "governance",
+      "title": "Governance",
+      "description": "Development workflow, review, and publication governance rules.",
+      "rules": [
+        {
+          "id": "governance-001",
+          "text": "All changes must be submitted via pull request to the main branch.",
+          "severity": "must"
+        },
+        {
+          "id": "governance-002",
+          "text": "The dual-repo model must be followed: jagilber-dev/scripts is the canonical development source and publishes to jagilber-org/scripts (public mirror).",
+          "severity": "must"
+        },
+        {
+          "id": "governance-003",
+          "text": "The public mirror must never contain .specify/, specs/, memory/, or test infrastructure.",
+          "severity": "must"
+        },
+        {
+          "id": "governance-004",
+          "text": "Conventional commit messages should be used (feat:, fix:, docs:, chore:).",
+          "severity": "should"
+        },
+        {
+          "id": "governance-005",
+          "text": "Constitution changes should be reviewed and constitution.md must stay in sync via sync-constitution.ps1.",
+          "severity": "should"
+        },
+        {
+          "id": "governance-006",
+          "text": "Template-managed bootstrap and hook changes should be adopted as versioned deltas and recorded in .template-adoption.json.",
+          "severity": "should"
+        },
+        {
+          "id": "governance-007",
+          "text": "Stable repo guidance should live under .instructions/ and be promoted through .specify/config/promotion-map.json only after validation.",
+          "severity": "should"
+        }
+      ]
+    },
+    {
+      "id": "testing",
+      "title": "Testing",
+      "description": "Testing requirements and Pester test standards.",
+      "rules": [
+        {
+          "id": "testing-001",
+          "text": "Every script must have a Pester v5+ test file named {ScriptName}.Tests.ps1.",
+          "severity": "must"
+        },
+        {
+          "id": "testing-002",
+          "text": "Tests must include Script Validation context (file exists, valid syntax, has synopsis, has description).",
+          "severity": "must"
+        },
+        {
+          "id": "testing-003",
+          "text": "Tests must pass in CI (GitHub Actions) on windows-latest.",
+          "severity": "must"
+        },
+        {
+          "id": "testing-004",
+          "text": "Integration tests should be tagged with 'Integration' and placed in tests/integration/ or use -Tag Integration.",
+          "severity": "should"
+        },
+        {
+          "id": "testing-005",
+          "text": "Tests should follow the Arrange-Act-Assert (AAA) pattern.",
+          "severity": "should"
+        },
+        {
+          "id": "testing-006",
+          "text": "External dependencies (Azure, REST APIs) should be mocked in unit tests.",
+          "severity": "should"
+        }
+      ]
+    }
+  ]
+}

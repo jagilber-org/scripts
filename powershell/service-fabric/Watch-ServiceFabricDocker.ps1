@@ -1,0 +1,94 @@
+<#
+.SYNOPSIS
+monitor docker status
+
+.DESCRIPTION
+    Monitors Docker daemon status, containers, images, and network on a Service Fabric node.
+    Polls at a configurable interval and displays current state.
+
+.NOTES
+
+    File Name  : Watch-ServiceFabricDocker.ps1
+
+    Author     : jagilber
+
+    Disclaimer : Provided AS-IS without warranty.
+
+    Version    : 1.0.0
+
+    Changelog  : 1.0.0 - Version normalization (constitution quality-007/008/009)
+
+
+
+.EXAMPLE
+    .\Watch-ServiceFabricDocker.ps1 -sleepSeconds 30
+
+.LINK
+invoke-webRequest "https://raw.githubusercontent.com/jagilber/powershellScripts/master/serviceFabric/sf-docker-monitor.ps1" -outFile "$pwd\sf-docker-monitor.ps1";
+.\sf-docker-monitor.ps1;
+#>
+
+[CmdletBinding()]
+param(
+    $sleepSeconds = 60
+)
+
+function main() {
+    write-host 'docker version:'
+    write-host (docker version | out-string)
+
+    write-host 'docker info:'
+    write-host (docker info | out-string)
+    $currentProcesses = (get-process) -imatch 'docker'
+
+    while ($true) {
+        clear-host;
+        (get-date).tostring('o');
+
+        $newProcesses = (get-process) -imatch 'docker'
+        $diffIds = (Compare-Object -ReferenceObject $currentProcesses -DifferenceObject $newProcesses -Property Id).Id
+        $currentDiffProcesses = $currentProcesses | ? Id -imatch ($diffIds -join '|')
+
+        if ($diffIds) {
+            write-host 'different docker processes:'
+            write-warning ($currentDiffProcesses | select NPM, PM, WS, CPU, ID, StartTime, ProcessName,ExitTime,ExitCode | ft * -AutoSize | out-string)
+            $diffProcesses += $currentDiffProcesses
+            $currentProcesses = $newProcesses
+        }
+
+        if ($diffProcesses) {
+            write-host 'previous docker processes:'
+            write-host ($diffProcesses | select NPM, PM, WS, CPU, ID, StartTime, ProcessName,ExitTime,ExitCode | ft * -AutoSize | out-string)
+        }
+
+        write-host 'current docker processes:'
+        write-host ($currentProcesses | select NPM, PM, WS, CPU, ID, StartTime, ProcessName | ft * -AutoSize | out-string)
+
+        write-host 'docker port:'
+        write-host ((netstat -bna) -imatch '2375' | out-string)
+
+        write-host 'docker ps:'
+        write-host (docker ps | out-string)
+
+        write-host 'docker images:'
+        write-host (docker images | out-string)
+
+        write-host 'docker container'
+        write-host (docker container ls -a --format "{{.ID}},{{.Command}},{{.CreatedAt}},{{.RunningFor}},{{.Ports}},{{.Status}},{{.Size}},{{.Names}},{{.Labels}},{{.Networks}}" | out-string)
+
+        #docker stats;
+        write-host 'Get-NetNatStaticMapping:'
+        write-host (Get-NetNatStaticMapping | out-string)
+
+        if ($sleepSeconds -gt 0) {
+            write-host "sleeping $sleepSeconds seconds"
+            start-sleep -seconds $sleepSeconds;
+        }
+        else {
+            write-host "finished"
+            return
+        }
+    }
+}
+
+main
